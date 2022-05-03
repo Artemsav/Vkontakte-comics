@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import os
 from dotenv import load_dotenv
 from pprint import pprint
+import random
 
 def get_extention(url):
     scheme, netloc, path, _, _, _ = urlparse(url)
@@ -13,6 +14,14 @@ def get_extention(url):
     head, tail = os.path.split(clean_path)
     root, extention = os.path.splitext(tail)
     return extention
+
+
+def download_random_comics():
+    pass
+
+
+def wall_post():
+    pass
 
 
 if __name__ == '__main__':
@@ -37,13 +46,12 @@ if __name__ == '__main__':
         }
     upload_response = requests.get('https://api.vk.com/method/photos.getWallUploadServer', params=upload_params)
     upload_response.raise_for_status()
-    pprint(upload_response.json(), indent=4)
     upload_url = upload_response.json()['response']['upload_url']
     with open('image.png', 'rb') as file:
         upl_url = upload_url
         files = {
             'group_id': vk_group_id,
-            'photo': file,  # Вместо ключа "media" скорее всего нужно подставить другое название ключа. Какое конкретно см. в доке API ВК.
+            'photo': file,
             }
         response = requests.post(upl_url, files=files)
         response.raise_for_status()
@@ -59,19 +67,19 @@ if __name__ == '__main__':
             }
         save_response = requests.post(save_url, params=params)
         save_response.raise_for_status()
-        #pprint(save_response.json(), indent=4)
         fetch_save_response = save_response.json()
         save_wall_url = 'https://api.vk.com/method/wall.post'
         owner_id = fetch_save_response['response'][0]['owner_id']
+        media_id = fetch_save_response['response'][0]['id']
         message = response1.json()['alt']
-        attachments = f'photo{owner_id}{message}'
+        attachments = f'photo{owner_id}_{media_id}'
         wall_params = {
+            'owner_id': f'-{vk_group_id}',
             'group_id': vk_group_id,
             'access_token': vk_access_token,
             'v': vk_api_version,
             'from_group': 1,
             'attachments': attachments,
-            'message': 'message'
+            'message': message
             }
         save_wall_response = requests.post(save_wall_url, params=wall_params)
-        print(save_wall_response.json())
