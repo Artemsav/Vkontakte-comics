@@ -1,12 +1,10 @@
-from turtle import up
-from urllib import request
 import requests
 import urllib
 from urllib.parse import urlparse
 import os
 from dotenv import load_dotenv
-from pprint import pprint
 import random
+
 
 def get_extention(url):
     scheme, netloc, path, _, _, _ = urlparse(url)
