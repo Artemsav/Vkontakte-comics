@@ -3,6 +3,7 @@
 ## Project description
 
 Script for downloading a random comic from the site [xkcd](xkcd.com) and automatically uploading it to public in [VK](vk.com/)
+To run the script please type in console:
 
 ```bash
 python main.py
