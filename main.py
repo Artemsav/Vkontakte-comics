@@ -94,5 +94,5 @@ if __name__ == '__main__':
     url = f'https://xkcd.com/{rand_int}/info.0.json'
     download_random_comics(url)
     message = get_comment(url)
-    wall_post(vk_access_token, vk_group_id, vk_app_id, vk_api_version)
+    wall_post(vk_access_token, vk_group_id, vk_api_version)
     os.remove('image.png')

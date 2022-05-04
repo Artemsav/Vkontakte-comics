@@ -2,8 +2,11 @@
 
 ## Project description
 
-Placeholder
+Script for downloading a random comic from the site [xkcd](xkcd.com) and automatically uploading it to public in [VK](vk.com/)
 
+```bash
+python main.py
+```
 
 ## Instalation
 
@@ -17,10 +20,18 @@ There is enviroment variables using in the application, you will need tp create 
 
 ```python
 # example of environment variables defined inside a .env file
-VK_KEY=eLbyo6isRjMrRssdsdsdddsaaafsaad
+VK_ACCESS_TOKEN=533bacf01e1165b57531ad114461ae8736d6506a3
+
+VK_GROUP_ID=213043905
+
+VK_APP_CLIENT_ID=233434
 ```
 
-VK_KEY - in the menu "Work with API" in the group management menu in VK
+VK_ACCESS_TOKEN - Get the user's access key. It is needed so that your application has access to your account and can post messages in groups. The key can be obtained manually without writing a single line of code. You need the following permissions: photos, groups, wall and offline. Please follo the [link](https://dev.vk.com/api/access-token/implicit-flow-user)
+
+VK_GROUP_ID - Create group in VK. Group id you can get via [this service](https://regvk.com/id/)
+
+VK_APP_CLIENT_ID - To get it, you need to create a ```standalone``` application in [VK](https://dev.vk.com/). You will get ```client_id``` of your application
 
 ## Project Goals
 
