@@ -33,21 +33,11 @@ def get_comment(url):
     return fetch_response['alt']
 
 
-def wall_post():
-    pass
-
-
-if __name__ == '__main__':
-    load_dotenv()
-    vk_access_token = os.getenv('VK_ACCESS_TOKEN')
-    vk_group_id = os.getenv('VK_GROUP_ID')
-    vk_app_id = os.getenv('VK_APP_CLIENT_ID')
-    vk_api_version = '5.131'
-    last_comics = 2614
-    rand_int = random.randint(1, last_comics)
-    url = f'https://xkcd.com/{rand_int}/info.0.json'
-    download_random_comics(url)
-    message = get_comment(url)
+def wall_post(
+    vk_access_token,
+    vk_group_id,
+    vk_api_version
+):
     upload_params = {
         'group_id': vk_group_id,
         'access_token': vk_access_token,
@@ -90,5 +80,19 @@ if __name__ == '__main__':
             'attachments': attachments,
             'message': message
             }
-        save_wall_response = requests.post(save_wall_url, params=wall_params)
+        requests.post(save_wall_url, params=wall_params)
+
+
+if __name__ == '__main__':
+    load_dotenv()
+    vk_access_token = os.getenv('VK_ACCESS_TOKEN')
+    vk_group_id = os.getenv('VK_GROUP_ID')
+    vk_app_id = os.getenv('VK_APP_CLIENT_ID')
+    vk_api_version = '5.131'
+    last_comics = 2614
+    rand_int = random.randint(1, last_comics)
+    url = f'https://xkcd.com/{rand_int}/info.0.json'
+    download_random_comics(url)
+    message = get_comment(url)
+    wall_post(vk_access_token, vk_group_id, vk_app_id, vk_api_version)
     os.remove('image.png')
