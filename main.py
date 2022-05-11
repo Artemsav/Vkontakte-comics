@@ -14,6 +14,12 @@ def get_extention(url):
     return extention
 
 
+def get_last_comics_page():
+    response = requests.get('https://xkcd.com/info.0.json')
+    response.raise_for_status()
+    return response.json()['num']
+
+
 def download_random_comics(url):
     response = requests.get(url)
     response.raise_for_status()
@@ -89,7 +95,7 @@ if __name__ == '__main__':
     vk_group_id = os.getenv('VK_GROUP_ID')
     vk_app_id = os.getenv('VK_APP_CLIENT_ID')
     vk_api_version = '5.131'
-    last_comics = 2614
+    last_comics = get_last_comics_page()
     rand_int = random.randint(1, last_comics)
     url = f'https://xkcd.com/{rand_int}/info.0.json'
     download_random_comics(url)
