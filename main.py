@@ -7,7 +7,7 @@ import random
 
 
 def get_extention(url):
-    scheme, netloc, path, _, _, _ = urlparse(url)
+    scheme, netloc, path, *_ = urlparse(url)
     clean_path = urllib.parse.unquote(path)
     head, tail = os.path.split(clean_path)
     root, extention = os.path.splitext(tail)
