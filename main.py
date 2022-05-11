@@ -112,7 +112,6 @@ if __name__ == '__main__':
     load_dotenv()
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     vk_group_id = os.getenv('VK_GROUP_ID')
-    vk_app_id = os.getenv('VK_APP_CLIENT_ID')
     vk_api_version = '5.131'
     try:
         last_comics = get_last_comics_page()
