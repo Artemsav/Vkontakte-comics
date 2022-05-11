@@ -96,8 +96,8 @@ if __name__ == '__main__':
     vk_app_id = os.getenv('VK_APP_CLIENT_ID')
     vk_api_version = '5.131'
     last_comics = get_last_comics_page()
-    rand_int = random.randint(1, last_comics)
-    url = f'https://xkcd.com/{rand_int}/info.0.json'
+    rand_num = random.randint(1, last_comics)
+    url = f'https://xkcd.com/{rand_num}/info.0.json'
     download_random_comics(url)
     message = get_comment(url)
     wall_post(vk_access_token, vk_group_id, vk_api_version)
