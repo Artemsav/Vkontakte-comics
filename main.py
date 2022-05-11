@@ -4,6 +4,11 @@ from urllib.parse import urlparse
 import os
 from dotenv import load_dotenv
 import random
+from requests import HTTPError
+
+
+class VkApiError(HTTPError):
+    """An VKApi error occurred."""
 
 
 def get_extention(url):
@@ -28,9 +33,16 @@ def download_random_comics(url):
     ext = get_extention(image_url)
     img_responce = requests.get(image_url)
     img_responce.raise_for_status()
-    with open(f'image{ext}', 'wb') as file:
+    filename = f'image{ext}'
+    with open(filename, 'wb') as file:
         file.write(img_responce.content)
-    return fetch_response['alt']
+    return (filename, fetch_response['alt'])
+
+
+def handle_vk_excp(response):
+    decode_response = response.json()
+    if decode_response['error']:
+        raise VkApiError(decode_response['error']['error_msg'])
 
 
 def get_wall_upload_server(vk_access_token, vk_group_id, vk_api_version):
@@ -41,8 +53,13 @@ def get_wall_upload_server(vk_access_token, vk_group_id, vk_api_version):
         }
     upload_response = requests.get('https://api.vk.com/method/photos.getWallUploadServer', params=upload_params)
     upload_response.raise_for_status()
+    handle_vk_excp(upload_response)
+    return upload_response
+
+
+def upload_pict_to_server(vk_group_id, upload_response, filename):
     upload_url = upload_response.json()['response']['upload_url']
-    with open('image.png', 'rb') as file:
+    with open(filename, 'rb') as file:
         upl_url = upload_url
         files = {
             'group_id': vk_group_id,
@@ -50,6 +67,7 @@ def get_wall_upload_server(vk_access_token, vk_group_id, vk_api_version):
             }
         response = requests.post(upl_url, files=files)
         response.raise_for_status()
+        handle_vk_excp(response)
     return response
 
 
@@ -66,6 +84,7 @@ def save_wall_photo(vk_access_token, vk_group_id, vk_api_version, response):
         }
     save_response = requests.post(save_url, params=params)
     save_response.raise_for_status()
+    handle_vk_excp(save_response)
     return save_response
 
 
@@ -86,6 +105,7 @@ def post_to_wall(vk_access_token, vk_group_id, vk_api_version, response):
         }
     wall_response = requests.post(save_wall_url, params=wall_params)
     wall_response.raise_for_status()
+    handle_vk_excp(wall_response)
 
 
 if __name__ == '__main__':
@@ -98,11 +118,16 @@ if __name__ == '__main__':
         last_comics = get_last_comics_page()
         rand_num = random.randint(1, last_comics)
         url = f'https://xkcd.com/{rand_num}/info.0.json'
-        message = download_random_comics(url)
-        wall_upload_server = get_wall_upload_server(
+        filename, message = download_random_comics(url)
+        upload_response = get_wall_upload_server(
             vk_access_token,
             vk_group_id,
             vk_api_version
+            )
+        wall_upload_server = upload_pict_to_server(
+            vk_group_id,
+            upload_response,
+            filename
             )
         wall_photo = save_wall_photo(
             vk_access_token,
@@ -112,4 +137,4 @@ if __name__ == '__main__':
             )
         post_to_wall(vk_access_token, vk_group_id, vk_api_version, wall_photo)
     finally:
-        os.remove('image.png')
+        os.remove(filename)
