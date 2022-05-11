@@ -30,20 +30,10 @@ def download_random_comics(url):
     img_responce.raise_for_status()
     with open(f'image{ext}', 'wb') as file:
         file.write(img_responce.content)
-
-
-def get_comment(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    fetch_response = response.json()
     return fetch_response['alt']
 
 
-def wall_post(
-    vk_access_token,
-    vk_group_id,
-    vk_api_version
-):
+def get_wall_upload_server(vk_access_token, vk_group_id, vk_api_version):
     upload_params = {
         'group_id': vk_group_id,
         'access_token': vk_access_token,
@@ -60,33 +50,42 @@ def wall_post(
             }
         response = requests.post(upl_url, files=files)
         response.raise_for_status()
-        fetch_response = response.json()
-        save_url = 'https://api.vk.com/method/photos.saveWallPhoto'
-        params = {
-            'group_id': vk_group_id,
-            'access_token': vk_access_token,
-            'v': vk_api_version,
-            'photo': fetch_response['photo'],
-            'server': fetch_response['server'],
-            'hash': fetch_response['hash']
-            }
-        save_response = requests.post(save_url, params=params)
-        save_response.raise_for_status()
-        fetch_save_response = save_response.json()
-        save_wall_url = 'https://api.vk.com/method/wall.post'
-        owner_id = fetch_save_response['response'][0]['owner_id']
-        media_id = fetch_save_response['response'][0]['id']
-        attachments = f'photo{owner_id}_{media_id}'
-        wall_params = {
-            'owner_id': f'-{vk_group_id}',
-            'group_id': vk_group_id,
-            'access_token': vk_access_token,
-            'v': vk_api_version,
-            'from_group': 1,
-            'attachments': attachments,
-            'message': message
-            }
-        requests.post(save_wall_url, params=wall_params)
+    return response
+
+
+def save_wall_photo(vk_access_token, vk_group_id, vk_api_version, response):
+    fetch_response = response.json()
+    save_url = 'https://api.vk.com/method/photos.saveWallPhoto'
+    params = {
+        'group_id': vk_group_id,
+        'access_token': vk_access_token,
+        'v': vk_api_version,
+        'photo': fetch_response['photo'],
+        'server': fetch_response['server'],
+        'hash': fetch_response['hash']
+        }
+    save_response = requests.post(save_url, params=params)
+    save_response.raise_for_status()
+    return save_response
+
+
+def post_to_wall(vk_access_token, vk_group_id, vk_api_version, response):
+    fetch_save_response = response.json()
+    save_wall_url = 'https://api.vk.com/method/wall.post'
+    owner_id = fetch_save_response['response'][0]['owner_id']
+    media_id = fetch_save_response['response'][0]['id']
+    attachments = f'photo{owner_id}_{media_id}'
+    wall_params = {
+        'owner_id': f'-{vk_group_id}',
+        'group_id': vk_group_id,
+        'access_token': vk_access_token,
+        'v': vk_api_version,
+        'from_group': 1,
+        'attachments': attachments,
+        'message': message
+        }
+    wall_response = requests.post(save_wall_url, params=wall_params)
+    wall_response.raise_for_status()
 
 
 if __name__ == '__main__':
@@ -99,8 +98,18 @@ if __name__ == '__main__':
         last_comics = get_last_comics_page()
         rand_num = random.randint(1, last_comics)
         url = f'https://xkcd.com/{rand_num}/info.0.json'
-        download_random_comics(url)
-        message = get_comment(url)
-        wall_post(vk_access_token, vk_group_id, vk_api_version)
+        message = download_random_comics(url)
+        wall_upload_server = get_wall_upload_server(
+            vk_access_token,
+            vk_group_id,
+            vk_api_version
+            )
+        wall_photo = save_wall_photo(
+            vk_access_token,
+            vk_group_id,
+            vk_api_version,
+            wall_upload_server
+            )
+        post_to_wall(vk_access_token, vk_group_id, vk_api_version, wall_photo)
     finally:
         os.remove('image.png')
