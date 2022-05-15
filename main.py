@@ -31,17 +31,17 @@ def download_random_comics(url):
     fetch_response = response.json()
     image_url = fetch_response['img']
     ext = get_extention(image_url)
-    img_responce = requests.get(image_url)
-    img_responce.raise_for_status()
+    img_response = requests.get(image_url)
+    img_response.raise_for_status()
     filename = f'image{ext}'
     with open(filename, 'wb') as file:
-        file.write(img_responce.content)
+        file.write(img_response.content)
     return (filename, fetch_response['alt'])
 
 
 def handle_vk_excp(response):
     decode_response = response.json()
-    if decode_response['error']:
+    if decode_response.get('error'):
         raise VkApiError(decode_response['error']['error_msg'])
 
 
