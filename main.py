@@ -39,7 +39,7 @@ def download_random_comics(url):
     return (filename, fetch_response['alt'])
 
 
-def handle_vk_excp(response):
+def handle_vk_exceptions(response):
     decode_response = response.json()
     if decode_response.get('error'):
         raise VkApiError(decode_response['error']['error_msg'])
@@ -53,7 +53,7 @@ def get_wall_upload_server(vk_access_token, vk_group_id, vk_api_version):
         }
     upload_response = requests.get('https://api.vk.com/method/photos.getWallUploadServer', params=upload_params)
     upload_response.raise_for_status()
-    handle_vk_excp(upload_response)
+    handle_vk_exceptions(upload_response)
     return upload_response
 
 
@@ -67,7 +67,7 @@ def upload_pict_to_server(vk_group_id, upload_response, filename):
             }
         response = requests.post(upl_url, files=files)
         response.raise_for_status()
-        handle_vk_excp(response)
+        handle_vk_exceptions(response)
     return response
 
 
@@ -84,7 +84,7 @@ def save_wall_photo(vk_access_token, vk_group_id, vk_api_version, response):
         }
     save_response = requests.post(save_url, params=params)
     save_response.raise_for_status()
-    handle_vk_excp(save_response)
+    handle_vk_exceptions(save_response)
     return save_response
 
 
@@ -105,7 +105,7 @@ def post_to_wall(vk_access_token, vk_group_id, vk_api_version, response):
         }
     wall_response = requests.post(save_wall_url, params=wall_params)
     wall_response.raise_for_status()
-    handle_vk_excp(wall_response)
+    handle_vk_exceptions(wall_response)
 
 
 if __name__ == '__main__':
