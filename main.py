@@ -28,21 +28,20 @@ def get_last_comics_page():
 def download_random_comics(url):
     response = requests.get(url)
     response.raise_for_status()
-    fetch_response = response.json()
-    image_url = fetch_response['img']
+    decoded_response = response.json()
+    image_url = decoded_response['img']
     ext = get_extention(image_url)
     img_response = requests.get(image_url)
     img_response.raise_for_status()
     filename = f'image{ext}'
     with open(filename, 'wb') as file:
         file.write(img_response.content)
-    return (filename, fetch_response['alt'])
+    return (filename, decoded_response['alt'])
 
 
-def handle_vk_exceptions(response):
-    decode_response = response.json()
-    if decode_response.get('error'):
-        raise VkApiError(decode_response['error']['error_msg'])
+def handle_vk_exceptions(decoded_response):
+    if decoded_response.get('error'):
+        raise VkApiError(decoded_response['error']['error_msg'])
 
 
 def get_wall_upload_server(vk_access_token, vk_group_id, vk_api_version):
@@ -53,12 +52,13 @@ def get_wall_upload_server(vk_access_token, vk_group_id, vk_api_version):
         }
     upload_response = requests.get('https://api.vk.com/method/photos.getWallUploadServer', params=upload_params)
     upload_response.raise_for_status()
-    handle_vk_exceptions(upload_response)
-    return upload_response
+    decoded_resoponse = upload_response.json()
+    upload_url = decoded_resoponse['response']['upload_url']
+    handle_vk_exceptions(decoded_resoponse)
+    return upload_url
 
 
-def upload_pict_to_server(vk_group_id, upload_response, filename):
-    upload_url = upload_response.json()['response']['upload_url']
+def upload_pict_to_server(vk_group_id, upload_url, filename):
     with open(filename, 'rb') as file:
         upl_url = upload_url
         files = {
@@ -66,33 +66,40 @@ def upload_pict_to_server(vk_group_id, upload_response, filename):
             'photo': file,
             }
         response = requests.post(upl_url, files=files)
-        response.raise_for_status()
-        handle_vk_exceptions(response)
-    return response
+    response.raise_for_status()
+    decoded_response = response.json()
+    handle_vk_exceptions(decoded_response)
+    return (
+        decoded_response['photo'],
+        decoded_response['server'],
+        decoded_response['hash']
+        )
 
 
-def save_wall_photo(vk_access_token, vk_group_id, vk_api_version, response):
-    fetch_response = response.json()
+def save_wall_photo(vk_access_token, vk_group_id, vk_api_version, decoded_response):
     save_url = 'https://api.vk.com/method/photos.saveWallPhoto'
+    photo, server, photo_hash = decoded_response
     params = {
         'group_id': vk_group_id,
         'access_token': vk_access_token,
         'v': vk_api_version,
-        'photo': fetch_response['photo'],
-        'server': fetch_response['server'],
-        'hash': fetch_response['hash']
+        'photo': photo,
+        'server': server,
+        'hash': photo_hash
         }
     save_response = requests.post(save_url, params=params)
     save_response.raise_for_status()
-    handle_vk_exceptions(save_response)
-    return save_response
+    decoded_save_response = save_response.json()
+    handle_vk_exceptions(decoded_save_response)
+    return (
+        decoded_save_response['response'][0]['owner_id'],
+        decoded_save_response['response'][0]['id']
+        )
 
 
-def post_to_wall(vk_access_token, vk_group_id, vk_api_version, response):
-    fetch_save_response = response.json()
+def post_to_wall(vk_access_token, vk_group_id, vk_api_version, decoded_response):
     save_wall_url = 'https://api.vk.com/method/wall.post'
-    owner_id = fetch_save_response['response'][0]['owner_id']
-    media_id = fetch_save_response['response'][0]['id']
+    owner_id, media_id = decoded_response
     attachments = f'photo{owner_id}_{media_id}'
     wall_params = {
         'owner_id': f'-{vk_group_id}',
@@ -105,7 +112,7 @@ def post_to_wall(vk_access_token, vk_group_id, vk_api_version, response):
         }
     wall_response = requests.post(save_wall_url, params=wall_params)
     wall_response.raise_for_status()
-    handle_vk_exceptions(wall_response)
+    handle_vk_exceptions(wall_response.json())
 
 
 if __name__ == '__main__':
@@ -118,14 +125,14 @@ if __name__ == '__main__':
         rand_num = random.randint(1, last_comics)
         url = f'https://xkcd.com/{rand_num}/info.0.json'
         filename, message = download_random_comics(url)
-        upload_response = get_wall_upload_server(
+        upload_url = get_wall_upload_server(
             vk_access_token,
             vk_group_id,
             vk_api_version
             )
         wall_upload_server = upload_pict_to_server(
             vk_group_id,
-            upload_response,
+            upload_url,
             filename
             )
         wall_photo = save_wall_photo(
